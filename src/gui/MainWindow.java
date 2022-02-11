@@ -3,6 +3,7 @@ package gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -10,15 +11,18 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import dao.DBUtil;
+import util.FileSaver;
 
 public class MainWindow extends JFrame {
 	private static final long serialVersionUID = -2278436951424873713L;
 	private static final Font FONT = new Font("Calibri Light", Font.PLAIN, 15);
+	private static String dbName;
 	private JComboBox<String> databasesComboBox;
 	private JList<String> listRelationships;
 
@@ -64,6 +68,7 @@ public class MainWindow extends JFrame {
 		btnSubmit.setFont(FONT);
 		btnSubmit.setBounds(131, 338, 196, 40);
 		getContentPane().add(btnSubmit);
+		btnSubmit.addActionListener(btnSubmitActionListener());
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 96, 428, 232);
@@ -86,9 +91,34 @@ public class MainWindow extends JFrame {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String dbName = (String) databasesComboBox.getSelectedItem();
+				dbName = (String) databasesComboBox.getSelectedItem();
 				List<String> list = DBUtil.getRelationshipsBetweenTables(dbName);
 				listRelationships.setListData(list.toArray(new String[list.size()]));
+			}
+		};
+	}
+
+	private ActionListener btnSubmitActionListener() {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (DBUtil.getRelatedTablesData(dbName).isEmpty()) {
+					JOptionPane.showMessageDialog(getContentPane(),
+							"Elle n'existe aucune relation entre les tables de la base de donneés sélectionée", "Message",
+							JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
+				try {
+					String location = FileSaver.saveDataAsJSON(dbName, DBUtil.getRelatedTablesData(dbName));
+					JOptionPane.showMessageDialog(getContentPane(),
+							"Les fichiers json sont creer avec succès dans le dossier :\n" + location);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(getContentPane(),
+							"Une erreur s'est produite lors de la création des fichiers JSON", "Message d'erreur",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		};
 	}
