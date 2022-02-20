@@ -17,11 +17,22 @@ public class FileSaver {
 		Files.createDirectories(Paths.get(filespath));
 		data.forEach((table, rows) -> {
 			try (BufferedWriter writer = new BufferedWriter(new FileWriter(filespath + table + ".json"))) {
-				writer.write(rows.toJSONString());
+				writer.write(rows.toJSONString().replaceAll(",", ",\n"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		});
+		return filespath;
+	}
+	
+	public static String saveDataAsJSON(String parentFolder, JSONArray data) throws IOException {
+		String filespath = FOLDER_PATH + parentFolder + "/";
+		Files.createDirectories(Paths.get(filespath));
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filespath + parentFolder + ".json"))) {
+			writer.write(data.toJSONString().replaceAll(",", ",\n"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return filespath;
 	}
 }
